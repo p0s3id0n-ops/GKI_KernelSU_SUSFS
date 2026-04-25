@@ -1,31 +1,34 @@
-name: GetManager
+# ========================================
+# 📥 WORKFLOW LẤY FILE KSU MANAGER & SUSFS MODULE
+# 👑 Việt hóa & Tối ưu bởi: p0s3id0n
+# ========================================
 
-# 适配 Node.js 24
+name: 📥 Tải Manager & SUSFS
+
+# ⚙️ Tương thích Node.js 24
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: read   # Allows triggering actions
+  contents: write
+  actions: read
 
 on:
-  workflow_call: # This allows this workflow to be called from another workflow
+  workflow_call:
     outputs:
       susVer:
-        description: "The fetched SUSFS version number"
+        description: "Bản SUSFS module fetch được"
         value: ${{ jobs.get_ksu_manager.outputs.susVer }}
 
       ksuVer:
-        description: "The calculated KSU version number"
+        description: "Bản APK KSU tính toán ra"
         value: ${{ jobs.get_ksu_manager.outputs.ksuVer }}
 
 jobs:
   get_ksu_manager:
     runs-on: ubuntu-latest
     outputs:
-      # 输出1: KSU版本号
       ksuVer: ${{ steps.get_version.outputs.kversion }}
-      # 输出2: SUSFS版本号
       susVer: ${{ steps.get_version.outputs.sversion }}
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -34,162 +37,122 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: 🧐 Debug Workflow Caller Context
+      - name: 🧐 Trích Xuất Dữ Liệu Gọi Workflow (Debug)
         run: |
-          echo "==================== DEBUG CONTEXT ===================="
+          echo "==================== 🕵️ THÔNG TIN DEBUG ===================="
           echo " "
-          echo "EVENT NAME: ${{ github.event_name }}"
+          echo "🚨 EVENT NAME: ${{ github.event_name }}"
           echo " "
-          echo "--- CALLER INFORMATION ---"
-          echo "  - Caller Repository: ${{ github.caller_repository }}"
-          echo "  - Caller Workflow:   ${{ github.caller_workflow }}"
-          echo "  - Caller User:       ${{ github.triggering_actor }}"
+          echo "--- 📞 THÔNG TIN CUỘC GỌI ---"
+          echo "  - Repo gọi lệnh : ${{ github.caller_repository }}"
+          echo "  - Tên Workflow  : ${{ github.caller_workflow }}"
+          echo "  - User trigger  : ${{ github.triggering_actor }}"
           echo " "
-          echo "--- WORKFLOW & JOB INFORMATION ---"
-          echo "  - Current Workflow:  ${{ github.workflow }}"
-          echo "  - Current Job ID:    ${{ github.job }}"
-          echo "  - Current Run ID:    ${{ github.run_id }}"
-          echo "  - Current Run Number:${{ github.run_number }}"
+          echo "--- 🖥️ THÔNG TIN JOB ---"
+          echo "  - File Workflow : ${{ github.workflow }}"
+          echo "  - Job ID        : ${{ github.job }}"
+          echo "  - Run ID        : ${{ github.run_id }}"
+          echo "  - Số hiệu       : ${{ github.run_number }}"
           echo " "
-          echo "--- GIT REFERENCE INFORMATION ---"
-          echo "  - Git Ref:           ${{ github.ref }}"
-          echo "  - Ref Type:          ${{ github.ref_type }}"
-          echo " "
-          echo "======================================================="
+          echo "============================================================"
           
-      - name: 安装依赖
+      - name: 🛠️ Cài Đặt Tools Hỗ Trợ
         run: |
           sudo apt-get update
           sudo apt-get install -y git curl jq
 
-      - name: 获取 KSU & SUSFS 版本
+      - name: 🔍 Lấy Ver Của KSU & SUSFS
         id: get_version
         run: |
-          echo "This is the ReSukiSU variant"
+          echo "📱 Đang lấy biến thể ReSukiSU..."
           git clone https://github.com/ReSukiSU/ReSukiSU.git KernelSU
 
           cd KernelSU
-
-          # 计算KSU版本号
           KSU_GIT_VERSION=$(git rev-list --count HEAD)
           KSU_VERSION=$((30700 + KSU_GIT_VERSION))
-          echo $KSU_VERSION
+          echo "✨ Ver KSU tính toán ra: $KSU_VERSION"
           echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
 
-          # 计算SUSFS版本号
           INFO="https://gitlab.com/simonpunk/susfs4ksu/-/raw/gki-android14-6.1/ksu_module_susfs/module.prop\?ref_type\=heads"
           SUS_VERSION=$(curl -s $INFO | awk -F '=' '$1 == "version" { print $2 }')
-          echo $SUS_VERSION
+          echo "✨ Ver SUSFS lấy được: $SUS_VERSION"
 
-          # 导出这两个值给release
           echo "kversion=$KSU_VERSION" >> $GITHUB_OUTPUT
           echo "sversion=$SUS_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 添加 KernelSU
+      - name: ⬇️ Tải APK KernelSU Manager Mới Nhất
         id: add_KSU
         continue-on-error: true
         run: |
-          echo "ReSukiSU..."
+          echo "🤖 Quét CI của repo ReSukiSU..."
           REPO="ReSukiSU/ReSukiSU"
           KSUM="Manager"
           FILENAME="build-manager.yml"
-          
-          # 初始化
           NUMBER=0
           DOWNLOAD_LIST=""
 
-          echo "开始查找包含 'manager' 产物的构建..."
+          echo "🔎 Đang lùng sục file Artifact Manager..."
           while true; do
             echo "--------------------------------------------------"
-            echo "正在检查第 ${NUMBER} 个历史构建 (0代表最新)..."
+            echo "Đang check bản build thành công số thứ ${NUMBER}..."
+            if [ "$NUMBER" -ge 9 ]; then echo "❌ Quét 9 bản rồi không có. Bó tay!"; break; fi
 
-            if [ "$NUMBER" -ge 9 ]; then
-              echo "查找九次仍然失败，跳出循环。"
-              break
-            fi
+            BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$REPO/actions/workflows/$FILENAME/runs?status=success" | jq -r '.workflow_runs['"$NUMBER"'].id')
+            echo "🔗 ID Build phát hiện: $BUILD_ID"
 
-            BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/$REPO/actions/workflows/$FILENAME/runs?status=success" |
-              jq -r '.workflow_runs['"$NUMBER"'].id')
-
-            echo "找到构建 ID: $BUILD_ID"
-
-            ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/$REPO/actions/runs/$BUILD_ID/artifacts")
-
+            ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$REPO/actions/runs/$BUILD_ID/artifacts")
             result=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name | contains("'"$KSUM"'")) | .name')
 
             if [ -z "$result" ]; then
-              echo "没有找到包含 '$KSUM' 的项"
+              echo "⏭️ Chưa thấy bóng dáng chữ '$KSUM', chuyển qua build cũ hơn."
               NUMBER=$((NUMBER + 1))
             else
-              echo "$result"
+              echo "🎉 Đã bắt được file: $result"
               DOWNLOAD_LIST=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name | contains("'"$KSUM"'")) | "\(.name)\t\(.archive_download_url)"')
               break
             fi
           done
          
-          if [ -z "$DOWNLOAD_LIST" ]; then
-            echo "未获取到可用的 Manager artifact 下载地址列表。"
-            exit 1
-          fi
+          if [ -z "$DOWNLOAD_LIST" ]; then echo "❌ Lỗi: Không bắt được link down Manager."; exit 1; fi
           
-          # 下载并解压所有 Manager 产物
           echo "$DOWNLOAD_LIST" | while IFS=$'\t' read -r NAME URL; do
             SAFE_NAME=$(echo "$NAME" | tr '/ ' '__')
             ZIP_NAME="ReSukiSU-${SAFE_NAME}(${{ env.KSU_VERSION }}).zip"
-            echo "下载 $NAME -> $ZIP_NAME"
+            echo "⬇️ Đang tải $NAME lưu thành $ZIP_NAME..."
             curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "$ZIP_NAME" "$URL"
             mkdir -p "manager-artifacts/$SAFE_NAME"
             unzip -o "$ZIP_NAME" -d "manager-artifacts/$SAFE_NAME"
             rm -rf "$ZIP_NAME"
           done
 
-      - name: 添加 SUSFS 模块
+      - name: 📦 Tải SUSFS Module Trực Tiếp
         id: add_SUSFS
         continue-on-error: true
         run: |
-          BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/workflows/build.yml/runs?status=success" |
-          jq -r '.workflow_runs[0].id')
-
-          ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs/$BUILD_ID/artifacts")
-
+          BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/workflows/build.yml/runs?status=success" | jq -r '.workflow_runs[0].id')
+          ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs/$BUILD_ID/artifacts")
           DOWNLOAD_URL=$(echo "$ARTIFACTS" | jq -r '.artifacts[0].archive_download_url') 
-
           NAME=$(echo "$ARTIFACTS" | jq -r '.artifacts[0].name')
+          
           echo "SUSFS_NAME=$NAME" >> $GITHUB_ENV
           NAME="susfs-$NAME.zip"
           
-          echo $DOWNLOAD_URL
-          echo $NAME
-          # 下载 Manager 文件
+          echo "⬇️ Tải file Module $NAME..."
           curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "$NAME" "$DOWNLOAD_URL"
-          echo "$NAME 文件已下载.zip"
+          echo "✅ Xong xuôi."
           
-          
-          # 解压 artifact zip 获取里面的模块文件
           mkdir -p susfs-module
           unzip "$NAME" -d susfs-temp
-
-          # 检查解压后的内容：如果是散装文件则打包成 zip
           cd susfs-temp
-          if ls *.zip 1>/dev/null 2>&1; then
-            # 里面已经是 zip 文件，直接移动
-            mv *.zip ../susfs-module/
-          else
-            # 是散装文件，打包成 zip
-            zip -r "../susfs-module/ksu_module_susfs.zip" .
-          fi
+          if ls *.zip 1>/dev/null 2>&1; then mv *.zip ../susfs-module/; else zip -r "../susfs-module/ksu_module_susfs.zip" .; fi
           cd ..
           rm -rf susfs-temp "$NAME"
 
-      - name: Notify on failure
+      - name: 🚨 Cảnh Báo Nếu Tải KSU Lỗi
         if: steps.add_KSU.outcome == 'failure'
-        run: echo "下载CI构建的KSU失败!"
+        run: echo "❌ Toang! Lỗi down KSU từ CI rồi Dev Lỏ ơi!"
 
-      - name: 上传APK
+      - name: 📤 Push APK Lên Artifact Của Repo Mình
         if: steps.add_KSU.outcome == 'success'
         uses: actions/upload-artifact@v6
         with:
@@ -197,7 +160,7 @@ jobs:
           path: |
             **/*.apk
 
-      - name: 上传SUSFS模块
+      - name: 📤 Push SUSFS Module Lên Artifact
         if: steps.add_SUSFS.outcome == 'success'
         uses: actions/upload-artifact@v6
         with:

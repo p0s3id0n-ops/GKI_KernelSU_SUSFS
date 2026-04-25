@@ -1,6 +1,11 @@
-name: 内核构建 - Android 14 (6.1)
+# ========================================
+# 🤖 WORKFLOW BUILD KERNEL ANDROID 14 (6.1)
+# 👑 Việt hóa & Tối ưu bởi: p0s3id0n
+# ========================================
 
-# 适配 Node.js 24
+name: 🤖 Build Kernel - Android 14 (6.1)
+
+# ⚙️ Tương thích Node.js 24
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -11,49 +16,48 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      # KernelSU 变体固定为 ReSukiSU
       kernelsu_branch:
-        description: "KSU 分支 (main/builtin/自定义commit hash，留空使用默认)"
+        description: "🌿 Nhánh KSU (main/builtin hoặc điền SHA Hash, bỏ trống là lấy mặc định)"
         required: false
         type: string
         default: ""
       version:
-        description: "自定义版本名 (可选)"
+        description: "🏷️ Tên Tùy Biến Phiên Bản (Nếu muốn)"
         required: false
         type: string
       build_time:
-        description: "自定义构建时间 (可选，N或留空=当前UTC)"
+        description: "🕒 Ép Thời Gian Build (N hoặc trống = Dùng giờ UTC)"
         required: false
         type: string
         default: "Sun Dec 01 08:10:00 UTC 2024"
       use_zram:
-        description: "启用 ZRAM 增强算法"
+        description: "🗜️ Bật Thuật Toán Nén ZRAM (LZ4KD)"
         required: true
         type: boolean
         default: false
       use_bbg:
-        description: "启用 BBG 防格机"
+        description: "🛡️ Bật Patch Chống Hard Brick Baseband (BBG)"
         required: true
         type: boolean
         default: false
       use_kpm:
-        description: "启用 KPM 功能"
+        description: "🧩 Tích Hợp Module KPM"
         required: true
         type: boolean
         default: false
       use_rekernel:
-        description: "启用 Re-Kernel 驱动"
+        description: "🔄 Bật Driver Re-Kernel"
         required: false
         type: boolean
         default: false
       cancel_susfs:
-        description: "禁用 SUSFS"
+        description: "🛑 CẤM Dùng Tính Năng Ẩn Root SUSFS"
         required: true
         type: boolean
         default: false
+
   workflow_call:
     inputs:
-      # KernelSU 变体固定为 ReSukiSU
       kernelsu_branch:
         required: true
         type: string
@@ -81,14 +85,14 @@ on:
         required: false
         type: boolean
       called_from_main:
-        description: "是否从 main.yml 调用（内部使用）"
+        description: "Biến môi trường nội bộ để không lặp việc lấy Manager"
         required: false
         type: boolean
         default: false
 
 jobs:
   build-kernels-a14-6-1:
-    name: "6.1.${{ matrix.sub_level }}-${{ matrix.os_patch_level }}"
+    name: "🔨 6.1.${{ matrix.sub_level }} - Patch ${{ matrix.os_patch_level }}"
     strategy:
       fail-fast: false
       matrix:
@@ -137,6 +141,8 @@ jobs:
             os_patch_level: "2025-12"
           - sub_level: "X"
             os_patch_level: "lts"
+            
+    # Gọi sang workflow build thực thi
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
@@ -155,7 +161,7 @@ jobs:
       supp_op: false
       enable_susfs: ${{ !inputs.cancel_susfs }}
 
-  # 仅在直接触发时运行，从 main.yml 调用时跳过
+  # Job riêng kéo KSU & SUSFS về (chỉ chạy khi bấm Run tay file này)
   get-ksu-manager:
     if: ${{ !inputs.called_from_main }}
     uses: ./.github/workflows/get-manager.yml
