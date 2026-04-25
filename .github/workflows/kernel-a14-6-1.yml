@@ -39,7 +39,7 @@ on:
         description: "🛡️ Bật Patch Chống Hard Brick Baseband (BBG)"
         required: true
         type: boolean
-        default: false
+        default: true
       use_kpm:
         description: "🧩 Tích Hợp Module KPM"
         required: true

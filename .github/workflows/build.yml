@@ -213,7 +213,7 @@ jobs:
       - name: 🧑‍💻 Cấu Hình Git Bot
         run: |
           git config --global user.name "BuildBot by p0s3id0n"
-          git config --global user.email "BuildGkiKernel@gmail.com"
+          git config --global user.email "p0s3id0n-ops@gmail.com"
 
       - name: 📥 Clone Các Repos Phụ Trợ (SUSFS, AK3, Patches)
         run: |
