@@ -507,7 +507,7 @@ jobs:
           📜 Lời Bình Từ Cha Đẻ Của Bản Build Này: 
           <pre>${INPUT_CHANGE_LOG}</pre>
           
-          ⬇️ Link Múc Luôn: <a href="https://github.com/ReSukiSU-GKI/GKI_KernelSU_SUSFS/releases/tag/${NEW_TAG}">Tải Xuống Ngay</a>
+          ⬇️ Link Múc Luôn: <a href="https://github.com/p0s3id0n-ops/GKI_KernelSU_SUSFS/releases/tag/${NEW_TAG}">Tải Xuống Ngay</a>
 
           <i>Chú ý: Mục "Commit" trên hiển thị thông tin thay đổi từ kho của nhóm ReSukiSU gốc nhé anh em.</i>
           EOF
