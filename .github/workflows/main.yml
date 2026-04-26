@@ -232,7 +232,7 @@ jobs:
 
   # ==================== Giai Đoạn 4: Đăng Release & Thông Báo Tele ====================
   release:
-    if: ${{ always() && !cancelled() && inputs.release_type != 'Actions' && github.repository == 'coolzyd9107/GKI_KernelSU_SUSFS' }}
+    if: ${{ always() && !cancelled() && inputs.release_type != 'Actions' && github.repository == 'p0s3id0n-ops/GKI_KernelSU_SUSFS' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

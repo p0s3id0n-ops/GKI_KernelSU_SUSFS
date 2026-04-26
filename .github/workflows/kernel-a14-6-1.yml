@@ -51,7 +51,7 @@ on:
         type: boolean
         default: false
       cancel_susfs:
-        description: "🛑 CẤM Dùng Tính Năng Ẩn Root SUSFS"
+        description: "🛑 Tắt Tính Năng Ẩn Root SuSFS"
         required: true
         type: boolean
         default: false
